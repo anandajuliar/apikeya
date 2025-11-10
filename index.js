@@ -1,63 +1,79 @@
+require("dotenv").config();
+const mysql = require("mysql2/promise");
 const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
-const app = express();
 const port = 3000;
 
-// Variabel untuk menyimpan API key terakhir yang dibuat
-let lastGeneratedKey = null;
+//const db = require("./models");
 
-// Middleware untuk menyajikan file statis (HTML, CSS, JS) dari folder 'public'
-app.use(express.static(path.join(__dirname, "public")));
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Middleware agar Express bisa membaca body 'raw' (text/plain)
-app.use(express.text());
 
-// Middleware agar Express bisa membaca body JSON
-app.use(express.json());
+app.use(express.json()); 
+app.use(express.static('public')); 
 
-// ENDPOINT 1: Membuat API Key (dipanggil oleh browser)
-app.post("/create", (req, res) => {
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,           
+    user: process.env.DB_USER,           
+    password: process.env.DB_PASSWORD,   
+    database: process.env.DB_NAME,       
+    port: process.env.DB_PORT,           
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+const KEY_PREFIX = 'Olip_j1p4_';
+
+
+app.get('/generate-apikey', async (req, res) => {
   try {
-    const randomBytes = crypto.randomBytes(32);
-    const token = randomBytes.toString("base64url");
-    const stamp = Date.now().toString(16);
-    const apiKey = `${stamp}$${token}`;
 
-    // Simpan key ke variabel sementara
-    lastGeneratedKey = apiKey;
-    console.log(`Key baru dibuat: ${apiKey}`);
+    const randomToken = crypto.randomBytes(16).toString('hex');
+    const newApiKey = KEY_PREFIX + randomToken;
+    
 
-    res.json({ apiKey });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Gagal membuat API key" });
+    const sql = "INSERT INTO api_keys (api_key) VALUES (?)";
+    await pool.query(sql, [newApiKey]);
+    
+    console.log("Key baru dibuat & disimpan di DB:", newApiKey);
+    res.json({ apiKey: newApiKey });
+    
+  } catch (error) {
+    console.error("Error saat generate key:", error);
+    res.status(500).json({ error: 'Gagal membuat API key di database' });
   }
 });
 
-// ENDPOINT 2: Memvalidasi API Key (dipanggil oleh Thunder Client / Postman)
-app.post("/validate", (req, res) => {
-  // Ambil key yang dikirim dari Thunder Client (body raw text)
-  const keyFromClient = req.body;
 
-  console.log(`Mencoba validasi key: ${keyFromClient}`);
-  console.log(`Key yang disimpan: ${lastGeneratedKey}`);
+app.post('/validate-apikey', async (req, res) => {
+  try {
+    const { apiKeyToValidate } = req.body;
 
-  // Bandingkan key dari klien dengan key terakhir yang disimpan
-  if (keyFromClient === lastGeneratedKey) {
-    res.json({
-      status: "sukses",
-      message: "API Key valid dan terautentikasi.",
-    });
-  } else {
-    res.status(401).json({
-      status: "gagal",
-      message: "API Key tidak valid atau salah.",
-    });
+    if (!apiKeyToValidate) {
+      return res.status(400).json({ error: 'API key dibutuhkan' });
+    }
+
+
+    const sql = "SELECT COUNT(*) as count FROM api_keys WHERE api_key = ?";
+    const [rows] = await pool.query(sql, [apiKeyToValidate]);
+    const count = rows[0].count;
+
+    if (count > 0) {
+      res.json({ valid: true, message: 'API Key sudah Valid' });
+    } else {
+      res.status(401).json({ valid: false, message: 'API Key Tidak Valid atau Tidak Ditemukan' });
+    }
+  } catch (error) {
+    console.error("Error saat validasi key:", error);
+    res.status(500).json({ error: 'Gagal memvalidasi key di database' });
   }
 });
 
-// Jalankan server
-app.listen(port, () => {
-  console.log(`Server berjalan di http://localhost:${port}`);
+
+app.listen(PORT, () => {
+  console.log(`Server berjalan di http://localhost:${PORT}`);
+  console.log(`Terhubung ke database MySQL 'apikeya_orm_db'`);
 });
