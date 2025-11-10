@@ -1,0 +1,15 @@
+{
+  "name": "apikeya",
+  "version": "1.0.0",
+  "description": "Create ApiKey",
+  "license": "ISC",
+  "author": "Julia",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

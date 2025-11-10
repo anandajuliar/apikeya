@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Key Generator</title>
+    <style>
+      /* Reset dan Font Dasar */
+      :root {
+        --navy-darkest: #0a192f;
+        --navy-dark: #112a4a;
+        --navy-light: #204a87;
+        --accent-blue: #007bff;
+        --accent-hover: #0056b3;
+        --text-light: #f0f4f8;
+        --text-dark: #a8b2d1;
+        --key-text: #76f1ad; /* Warna hijau neon untuk key */
+        --border-color: #004a99;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background-color: var(--navy-darkest);
+        color: var(--text-light);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 1rem;
+        box-sizing: border-box;
+      }
+
+      /* Kontainer Utama */
+      .container {
+        background-color: var(--navy-dark);
+        padding: 2rem 2.5rem;
+        border-radius: 10px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        width: 100%;
+        max-width: 600px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+      }
+
+      /* Judul */
+      h1 {
+        color: var(--text-light);
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+      }
+
+      p {
+        color: var(--text-dark);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+      }
+
+      /* Tombol Generate Utama */
+      #generateBtn {
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: bold;
+        padding: 0.85rem 1.5rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: var(--accent-blue);
+        color: white;
+        width: 100%;
+        margin-bottom: 2rem;
+        letter-spacing: 0.5px;
+      }
+
+      #generateBtn:hover {
+        background-color: var(--accent-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
+      }
+
+      /* Area Output Key */
+      .output-label {
+        display: block;
+        text-align: left;
+        color: var(--text-dark);
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
+
+      .output-container {
+        position: relative;
+        width: 100%;
+      }
+
+      /* Text Area */
+      textarea#apiKeyArea {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 1.1rem;
+        width: 100%;
+        padding: 0.75rem;
+        background-color: var(--navy-darkest);
+        color: var(--key-text);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        resize: none;
+        box-sizing: border-box;
+        outline: none;
+        padding-right: 6.5rem;
+      }
+
+      textarea#apiKeyArea::placeholder {
+        color: #4a6c9b;
+      }
+
+      textarea#apiKeyArea:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+      }
+
+      /* Tombol Copy */
+      #copyBtn {
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: bold;
+        padding: 0.6rem 0.8rem;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: var(--navy-light);
+        color: var(--text-light);
+        position: absolute;
+        top: 50%;
+        right: 0.75rem;
+        transform: translateY(-50%);
+      }
+
+      #copyBtn:hover {
+        background-color: var(--accent-blue);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>API Key Generator</h1>
+      <p>Klik tombol di bawah untuk membuat API key baru yang aman.</p>
+
+      <button id="generateBtn">Buat API Key Baru</button>
+
+      <label for="apiKeyArea" class="output-label">Your New API Key:</label>
+
+      <div class="output-container">
+        <textarea
+          id="apiKeyArea"
+          rows="3"
+          readonly
+          placeholder="API key Anda akan muncul di sini..."
+        ></textarea>
+        <button id="copyBtn" title="Salin ke Clipboard">Salin</button>
+      </div>
+    </div>
+
+    <script>
+      /**
+       * Fungsi untuk menyalin teks ke clipboard
+       * (Fungsi ini tidak diubah)
+       */
+      function copyToClipboard(text, buttonElement) {
+        if (!text) {
+          alert("Tidak ada API key untuk disalin. Buat satu terlebih dahulu.");
+          return;
+        }
+
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            const originalText = buttonElement.textContent;
+            buttonElement.textContent = "Disalin!";
+            buttonElement.style.backgroundColor = "#28a745"; // Warna hijau sukses
+
+            setTimeout(() => {
+              buttonElement.textContent = originalText;
+              buttonElement.style.backgroundColor = "var(--navy-light)";
+            }, 2000); // Kembali ke normal setelah 2 detik
+          })
+          .catch((err) => {
+            console.error("Gagal menyalin ke clipboard: ", err);
+            alert("Gagal menyalin. Silakan salin secara manual.");
+          });
+      }
+
+      // --- Event Listeners ---
+
+      const generateButton = document.getElementById("generateBtn");
+      const copyButton = document.getElementById("copyBtn");
+      const apiKeyTextarea = document.getElementById("apiKeyArea");
+
+      // Event listener untuk tombol "Generate" (DIUBAH)
+      // Sekarang memanggil server Anda di endpoint /create
+      generateButton.addEventListener("click", async () => {
+        try {
+          // 1. Kirim permintaan POST ke endpoint /create di server Anda
+          const response = await fetch("/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            // Body bisa dikosongkan jika server tidak memerlukannya
+          });
+
+          if (!response.ok) {
+            throw new Error("Gagal mengambil data dari server");
+          }
+
+          // 2. Ambil respons JSON dari server
+          const data = await response.json();
+
+          // 3. Tampilkan apiKey dari server ke text area
+          apiKeyTextarea.value = data.apiKey;
+        } catch (error) {
+          console.error("Gagal membuat key:", error);
+          apiKeyTextarea.value = "Error: Gagal terhubung ke server.";
+        }
+      });
+
+      // Event listener untuk tombol "Copy" (Tidak diubah)
+      copyButton.addEventListener("click", () => {
+        copyToClipboard(apiKeyTextarea.value, copyButton);
+      });
+    </script>
+  </body>
+</html>
